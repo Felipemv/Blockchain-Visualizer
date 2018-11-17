@@ -6,6 +6,12 @@ module.exports = function (application) {
         res.render('login')
     });
 
+    application.get('/auth', (req, res) => {
+        AuthController.login(req.body, function (resp) {
+            res.json(resp);
+        });
+    });
+
     application.post('/auth/register', (req, res) => {
         AuthController.insert(req.body, function (resp) {
             res.json(resp);

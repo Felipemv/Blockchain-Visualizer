@@ -1,6 +1,25 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt-nodejs');
 
+exports.login = function (body, callback) {
+    User.findOne({username: body.username}, function (error, user) {
+        if (error) {
+            callback({success: false, error: "An error occurred."})
+        } else if (!user) {
+            callback({success: false, error: "Incorrect username or password."});
+
+        } else {
+            bcrypt.compare(body.password, user.password, function(err, res){
+                if(!res){
+                    callback({success: false, error: "Incorrect username or password."});
+                }else{
+                    callback(user);
+                }
+            });
+        }
+    });
+};
+
 exports.insert = function (body, callback) {
     const username = body.username;
     const password = body.password;
@@ -40,11 +59,11 @@ exports.insert = function (body, callback) {
 };
 
 exports.getAll = function (callback) {
-    User.find({}, function (error, User) {
+    User.find({}, function (error, user) {
         if (error) {
             callback({error: 'No Users Found.'});
         } else {
-            callback(User);
+            callback(user);
         }
     });
 };
