@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt-nodejs');
 const jwt = require('jsonwebtoken');
-const secret = require('../../config/jwt');
+const jwtConfig = require('../../config/jwt');
 
 exports.login = function (body, callback) {
     User.findOne({username: body.username}, function (error, user) {
@@ -15,7 +15,7 @@ exports.login = function (body, callback) {
                 if (!res) {
                     callback({status: 500, auth: false, error: "Incorrect username or password."});
                 } else {
-                    var token = jwt.sign({"_id": user._id}, secret.secret, {expiresIn: 604800}); //Token com tempo de expiração 7 dias.
+                    var token = jwt.sign({"_id": user._id}, jwtConfig.secret, {expiresIn: 604800}); //Token com tempo de expiração 7 dias.
                     callback({status: 200, auth: true, token: token});
                 }
             });
@@ -23,40 +23,46 @@ exports.login = function (body, callback) {
     });
 };
 
-exports.insert = function (body, callback) {
-    const username = body.username;
-    const password = body.password;
-    const confirmPassword = body.confirmPassword;
+exports.insert = function (req, callback) {
+    const username = req.body.username;
+    const password = req.body.password;
+    const confirmPassword = req.body.confirmPassword;
 
-    if (username && password && confirmPassword) {
-        if (password === confirmPassword) {
-            User.findOne({'username': username}, function (AuthUser) {
-                if (AuthUser) {
-                    callback({success: false, error: 'Username already in use'});
-                } else {
-                    bcrypt.hash(password.toString(), null, null, function (err, hash) {
-                        if (err) {
-                            callback({success: false, error: err});
-                        } else {
-                            new User({
-                                'username': body.username,
-                                'password': hash
-                            }).save(function (error, user) {
-                                if (error) {
-                                    callback({error: 'Cannot create user.'});
-                                } else {
-                                    callback(user);
-                                }
-                            });
-                        }
-                    });
-                }
-            });
+    const verified = jwtConfig.verifyJWT(req);
+
+    if (verified.auth) {
+        if (username && password && confirmPassword) {
+            if (password === confirmPassword) {
+                User.findOne({'username': username}, function (AuthUser) {
+                    if (AuthUser) {
+                        callback({success: false, error: 'Username already in use'});
+                    } else {
+                        bcrypt.hash(password.toString(), null, null, function (err, hash) {
+                            if (err) {
+                                callback({success: false, error: err});
+                            } else {
+                                new User({
+                                    'username': req.body.username,
+                                    'password': hash
+                                }).save(function (error, user) {
+                                    if (error) {
+                                        callback({error: 'Cannot create user.'});
+                                    } else {
+                                        callback(user);
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            } else {
+                callback({success: false, error: 'Password and confirmation does not match.'});
+            }
         } else {
-            callback({success: false, error: 'Password and confirmation does not match.'})
+            callback({success: false, error: 'Invalid user or password.'});
         }
-    } else {
-        callback({success: false, error: 'Invalid user or password.'})
+    }else{
+        callback({success: false, error: 'User not authenticated'});
     }
 
 };
