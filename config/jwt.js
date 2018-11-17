@@ -1,4 +1,4 @@
 module.exports = {
-    'secret': 'sua-palavra-secreta'
-}
+    'secret': 'AC308'
+};
 

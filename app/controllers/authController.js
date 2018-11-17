@@ -1,19 +1,22 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt-nodejs');
+const jwt = require('jsonwebtoken');
+const secret = require('../../config/jwt');
 
 exports.login = function (body, callback) {
     User.findOne({username: body.username}, function (error, user) {
         if (error) {
-            callback({success: false, error: "An error occurred."})
+            callback({status: 500, auth: false, error: "An error occurred."});
         } else if (!user) {
-            callback({success: false, error: "Incorrect username or password."});
+            callback({status: 500, auth: false, error: "Incorrect username or password."});
 
         } else {
-            bcrypt.compare(body.password, user.password, function(err, res){
-                if(!res){
-                    callback({success: false, error: "Incorrect username or password."});
-                }else{
-                    callback(user);
+            bcrypt.compare(body.password, user.password, function (err, res) {
+                if (!res) {
+                    callback({status: 500, auth: false, error: "Incorrect username or password."});
+                } else {
+                    var token = jwt.sign({"_id": user._id}, secret.secret, {expiresIn: 604800}); //Token com tempo de expiração 7 dias.
+                    callback({status: 200, auth: true, token: token});
                 }
             });
         }

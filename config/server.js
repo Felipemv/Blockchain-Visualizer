@@ -1,7 +1,8 @@
 const express = require('express'),
     consign = require('consign'),
     bodyParser = require('body-parser'),
-    expressSession = require('express-session');
+    expressSession = require('express-session'),
+    jwt = require('jsonwebtoken');
 
 let app = express();
 app.set('view engine', 'ejs');
