@@ -30,7 +30,7 @@ function insertStatisticsInMongo(reqDetails) {
 }
 
 module.exports.renderIndex = function (application, req, res, order, numBlocks) {
-    insertStatisticsInMongo(getReqDetails(req));
+    var obj = insertStatisticsInMongo(getReqDetails(req));
 
     request(`${endpoint}/${order}/${numBlocks}`, (err, resp, body) => {
         body = JSON.parse(body);

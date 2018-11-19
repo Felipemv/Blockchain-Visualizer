@@ -1,21 +1,27 @@
 const AuthController = require('../controllers/authController');
+const index = require('../controllers/index');
 const jwtConfig = require('../../config/jwt');
 
 module.exports = function (application) {
 
     application.get('/login', (req, res) => {
-        res.render('login')
+        res.render('login',{status:200})
     });
 
     application.get('/logout', (req, res) => {
-        res.status(200).send({auth: false, token: null});
+        req.session.destroy(function () {
+            res.redirect('/login');
+        });
     });
 
     application.post('/auth', (req, res) => {
-            AuthController.login(req.body, function (resp) {
-                res.status(resp.status).send(resp);
-            });
-
+        AuthController.login(req.body, function (resp) {
+            if(resp.status === 200)
+                res.render("index")
+            else{
+                res.render("login",{status:resp.status})
+            }
+        });
     });
 
     application.post('/auth/register', (req, res) => {

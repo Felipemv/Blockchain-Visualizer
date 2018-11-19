@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt-nodejs');
 const jwt = require('jsonwebtoken');
 const jwtConfig = require('../../config/jwt');
 
-exports.login = function (body, callback) {
+
+let login = (body,callback)=>{
     User.findOne({username: body.username}, function (error, user) {
         if (error) {
             callback({status: 500, auth: false, error: "An error occurred."});
@@ -15,15 +16,17 @@ exports.login = function (body, callback) {
                 if (!res) {
                     callback({status: 500, auth: false, error: "Incorrect username or password."});
                 } else {
-                    var token = jwt.sign({"_id": user._id}, jwtConfig.secret, {expiresIn: 604800}); //Token com tempo de expiração 7 dias.
-                    callback({status: 200, auth: true, token: token});
+                    body.session = {
+                        username:res.username,
+                    };
+                    //var token = jwt.sign({"_id": user._id}, jwtConfig.secret, {expiresIn: 604800}); //Token com tempo de expiração 7 dias.
+                    callback({status: 200, auth: true});
                 }
             });
         }
     });
 };
-
-exports.insert = function (req, callback) {
+let insert =  (req, callback) => {
     const username = req.body.username;
     const password = req.body.password;
     const confirmPassword = req.body.confirmPassword;
@@ -135,7 +138,7 @@ exports.update = function (userId, body, callback) {
     });
 };
 
-exports.delete = function (userId, callback) {
+let deleted = (userId, callback) =>{
     User.findById(userId, function (error, user) {
         if (error) {
             callback({error: 'No user information found with the specified id.'})
@@ -147,4 +150,11 @@ exports.delete = function (userId, callback) {
             });
         }
     })
+};
+
+exports = module.exports = {
+    login:login,
+    insert:insert,
+    delete:deleted
+
 };
